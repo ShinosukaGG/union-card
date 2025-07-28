@@ -1,0 +1,9 @@
+{
+  "name": "union-checker",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {},
+  "dependencies": {
+    "playwright": "^1.43.1"
+  }
+}
