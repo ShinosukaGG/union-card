@@ -1,40 +1,21 @@
-// api/search.js
-const { chromium } = require('playwright');
+export default async function handler(req, res) {
+  const name = req.query.username;
 
-module.exports = async (req, res) => {
-  const { username } = req.query;
+  if (!name) return res.status(400).json({ error: 'Username required' });
 
-  if (!username) {
-    return res.status(400).json({ error: 'Username required' });
+  const url = `https://api.dashboard.union.build/rest/v1/user_levels?select=*&display_name=ilike.*${encodeURIComponent(name)}*&order=total_xp.desc,user_id.asc`;
+
+  try {
+    const response = await fetch(url); // ✅ No headers needed
+    const data = await response.json();
+
+    if (Array.isArray(data) && data.length > 0) {
+      res.status(200).json(data[0]); // return first matching result
+    } else {
+      res.status(404).json({ error: 'No match found' });
+    }
+  } catch (err) {
+    console.error('API fetch failed:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.goto('https://union-build-leaderboard.vercel.app', { waitUntil: 'networkidle' });
-
-  await page.waitForSelector("input[type='search']");
-  await page.fill("input[type='search']", username);
-  await page.waitForTimeout(1500);
-
-  const result = await page.evaluate(() => {
-    const row = document.querySelector('tbody tr');
-    if (!row) return null;
-
-    const cells = row.querySelectorAll('td');
-    return {
-      rank: cells[0]?.innerText.trim(),
-      title: cells[1]?.innerText.trim(),
-      username: cells[2]?.innerText.trim(),
-      xp: cells[3]?.innerText.trim(),
-      level: cells[4]?.innerText.trim()
-    };
-  });
-
-  await browser.close();
-
-  if (result) {
-    res.status(200).json(result);
-  } else {
-    res.status(404).json({ error: 'No match found' });
-  }
-};
+}
