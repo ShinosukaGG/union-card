@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Union Leaderboard Checker</title>
+  <style>
+    body { background: #111; color: white; font-family: sans-serif; padding: 2rem; text-align: center; }
+    input, button { padding: 10px; font-size: 1rem; margin: 5px; }
+    table { margin: 20px auto; border-collapse: collapse; width: 100%; max-width: 600px; }
+    th, td { padding: 10px; border: 1px solid #333; }
+  </style>
+</head>
+<body>
+  <h1>Union Leaderboard Checker</h1>
+  <input id="username" placeholder="Enter username..." />
+  <button onclick="search()">Search</button>
+  <div id="result"></div>
+
+  <script>
+    async function search() {
+      const username = document.getElementById('username').value;
+      const resultBox = document.getElementById('result');
+      resultBox.innerHTML = "Searching...";
+
+      try {
+        const res = await fetch(`/api/search?username=${encodeURIComponent(username)}`);
+        const data = await res.json();
+
+        if (data.error) {
+          resultBox.innerHTML = `<p>❌ ${data.error}</p>`;
+          return;
+        }
+
+        resultBox.innerHTML = `
+          <table>
+            <tr><th>Rank</th><th>Username</th><th>Title</th><th>XP</th><th>Level</th></tr>
+            <tr>
+              <td>${data.rank}</td>
+              <td>${data.username}</td>
+              <td>${data.title}</td>
+              <td>${data.xp}</td>
+              <td>${data.level}</td>
+            </tr>
+          </table>
+        `;
+      } catch (e) {
+        resultBox.innerHTML = `<p>⚠️ Error: ${e.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
